@@ -23,7 +23,8 @@ class PayoutOrderJob implements ShouldQueue
      */
     public function __construct(
         public Order $order
-    ) {}
+    ) {
+    }
 
     /**
      * Use the API service to send a payout of the correct amount.
@@ -33,6 +34,11 @@ class PayoutOrderJob implements ShouldQueue
      */
     public function handle(ApiService $apiService)
     {
-        // TODO: Complete this method
+        try {
+            $apiService->sendPayout($this->order->affiliate->user->email, $this->order->commission_owed);
+            Order::find($this->order->id)->update(['payout_status' => Order::STATUS_PAID]);
+        } catch (\RuntimeException $th) {
+            throw $th;
+        }
     }
 }
